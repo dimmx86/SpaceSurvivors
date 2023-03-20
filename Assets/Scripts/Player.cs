@@ -9,4 +9,5 @@ public class Player : MonoBehaviour
 
     public PlayerMover Mover => _mover;
     public Rigidbody Rigidbody => _rigidbody;
+
 }
