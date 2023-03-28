@@ -4,16 +4,23 @@ using UnityEngine;
 
 public class EnemyMover : MonoBehaviour
 {
-    //[SerializeField] 
-    private float _speed = 1;
     [SerializeField]
-    private float _maxRadiansDelta = 1;
+    private Rigidbody _thisRB;
     [SerializeField]
-    private float _maxMagnitudeDelta = 1;
+    private float _maxSpeed = 1;
+    [SerializeField]
+    private float _maxSpeedTurn = 1;
+    [SerializeField]
+    private float _forceEng = 1;
+    [SerializeField]
+    private float _inertialDampers = 1;
+    
 
     private Transform _target;
     private Transform _rootTransform;
     private Vector3 _directionMove = Vector3.zero;
+    private Vector3 _curentForce = Vector3.zero;
+    private Vector3 _force = Vector3.zero;
 
     public void SetTarget(Transform target, Transform transform)
     {
@@ -27,20 +34,27 @@ public class EnemyMover : MonoBehaviour
     {
         if (_target != null)
         {
-            //_directionMove = _target.position - _rootTransform.position;
-            //_directionMove.z = 0;
-            //_directionMove = Vector3.RotateTowards(_directionMove, _target.position, _maxRadiansDelta, _maxMagnitudeDelta);
             _directionMove = _target.position - _rootTransform.position;
+            _directionMove = _directionMove.normalized;
+            //_rootTransform.rotation = Quaternion.LookRotation(_directionMove + _target.position);
+            if (_directionMove != Vector3.zero)
+            {
+                _force = Vector3.Slerp(_force, _directionMove, _maxSpeedTurn);
 
-            _rootTransform.rotation = Quaternion.LookRotation(_directionMove + _target.position);
-            //_rootTransform.position = Vector3.Lerp(_target.position, _rootTransform.position, _speed * Time.deltaTime);
-            //if (_directionMove != Vector3.zero)
-            //{
-            //    var vTemp = _rootTransform.position;
-            //    vTemp.z = 0;
-            //    _rootTransform.position = vTemp;
-            //    _rootTransform.position = _directionMove.normalized * _speed * Time.deltaTime;                
-            //}
+                _thisRB.rotation = Quaternion.LookRotation(_force);
+
+                _curentForce = Vector3.Slerp(_curentForce, _curentForce + _force * _forceEng, _maxSpeedTurn) * _inertialDampers;
+                if (_curentForce.magnitude > _maxSpeed)
+                {
+                    _curentForce = _curentForce.normalized * _maxSpeed;
+                }
+                _thisRB.velocity = _curentForce;
+            }
+            else
+            {
+                _curentForce = _curentForce * _inertialDampers;
+                _thisRB.velocity = _curentForce;
+            }
         }
     }
 }
